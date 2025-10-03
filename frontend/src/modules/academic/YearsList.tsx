@@ -1,0 +1,3 @@
+import { useEffect,useState } from 'react'
+import { api } from '../../services/api'
+export default function YearsList(){const[rows,setRows]=useState<any[]>([]);useEffect(()=>{api.get('/academic/years').then(r=>setRows(r.data))},[]);return(<div className='space-y-4'><h1 className='text-xl font-semibold'>Años Académicos</h1><div className='grid md:grid-cols-2 gap-3'>{rows.map((y:any)=>(<div key={y.yearId} className='bg-white rounded-xl shadow border p-4 flex items-center justify-between'><span className='font-medium'>{y.name}</span><span className={`text-xs px-2 py-1 rounded ${y.isActive?'bg-green-100 text-green-700':'bg-gray-100 text-gray-600'}`}>{y.isActive?'Activo':'Inactivo'}</span></div>))}</div></div>)}

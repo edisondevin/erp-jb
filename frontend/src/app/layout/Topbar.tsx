@@ -1,0 +1,2 @@
+import { useAuth } from '../../auth/AuthProvider'
+export default function Topbar(){const {user,logout}=useAuth();return(<header className='h-14 border-b bg-white flex items-center justify-between px-4'><div className='font-semibold'>Jorge Basadre – ERP</div><div className='flex items-center gap-3'>{user&&<span className='text-sm text-gray-600'>{user.email}</span>}<button onClick={logout} className='px-3 py-2 bg-gray-900 text-white rounded-md'>Salir</button></div></header>)}

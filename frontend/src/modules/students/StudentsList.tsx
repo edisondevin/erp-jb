@@ -1,0 +1,3 @@
+import { useEffect,useState } from 'react'
+import { api } from '../../services/api'
+export default function StudentsList(){const[rows,setRows]=useState<any[]>([]);useEffect(()=>{api.get('/students').then(r=>setRows(r.data))},[]);return(<div className='space-y-4'><h1 className='text-xl font-semibold'>Estudiantes</h1><div className='bg-white rounded-xl shadow border overflow-x-auto'><table className='w-full text-sm'><thead><tr><th className='text-left p-2 bg-gray-100 font-semibold'>DNI</th><th className='text-left p-2 bg-gray-100 font-semibold'>Nombre</th></tr></thead><tbody>{rows.map((s:any)=>(<tr key={s.studentId}><td className='p-2 border-t'>{s.dni}</td><td className='p-2 border-t'>{s.firstName} {s.lastName}</td></tr>))}</tbody></table></div></div>)}
