@@ -9,6 +9,8 @@ import usersRouter from './modules/users/users.router';
 import academicRoutes from './modules/academic/academic.routes';
 import studentsRoutes from './modules/students/students.routes';
 import authRoutes from './modules/auth/auth.routes';
+import rolesRouter from './modules/auth/roles.router';
+import permissionsRouter from './modules/auth/permissions.router';
 
 dotenv.config();
 
@@ -58,6 +60,8 @@ async function bootstrap() {
   app.use('/api/v1/users', usersRouter);
   app.use('/api/v1/academic', academicRoutes);
   app.use('/api/v1/students', studentsRoutes);
+  app.use('/api/v1/roles', rolesRouter);
+  app.use('/api/v1/permissions', permissionsRouter);
 
   // 404 y manejador de errores (opcional pero recomendable)
   app.use((_req, res) => res.status(404).json({ error: 'Not found' }));

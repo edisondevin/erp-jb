@@ -3,6 +3,8 @@ import { signAccess, signRefresh } from './jwt';
 import { getRolesAndPerms, getUserByEmail, validatePassword } from './auth.service';
 import { requireAuth } from './requireAuth';
 import * as jwt from 'jsonwebtoken';
+import { AppDataSource } from '../../config/data-source';
+import User from '../users/user.entity';
 
 
 const r = Router();
@@ -45,6 +47,15 @@ r.post('/login', async (req, res) => {
     console.error('[LOGIN] ERROR:', err);
     res.status(500).json({ error: 'LOGIN_ERROR', detail: String(err) });
   }
+});
+
+
+r.get('/me', requireAuth, async (req: any, res) => {
+  const userId = req.user.sub;
+  const u = await AppDataSource.getRepository(User).findOne({ where: { userId } });
+  if (!u) return res.status(404).json({ error: 'not found' });
+  const { roles, perms } = await getRolesAndPerms(userId);
+  res.json({ email: u.email, roles, perms });
 });
 
 // debug para verificar que el body llega

@@ -1,0 +1,9 @@
+﻿// PATCH NOTE: backend/src/app.ts
+// Agrega estas líneas (imports y use) si aún no están registradas las rutas:
+/*
+import rolesRouter from './modules/auth/roles.router';
+import permissionsRouter from './modules/auth/permissions.router';
+
+app.use('/api/v1/roles', rolesRouter);
+app.use('/api/v1/permissions', permissionsRouter);
+*/

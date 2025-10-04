@@ -1,0 +1,9 @@
+﻿// PATCH NOTE: frontend/src/app/routes.tsx
+/*
+import UserForm from '../modules/users/UserForm';
+import UserRolesForm from '../modules/users/UserRolesForm';
+
+<Route path='/users/new' element={<UserForm/>}/>
+<Route path='/users/:id/edit' element={<UserForm/>}/>
+<Route path='/users/:id/roles' element={<UserRolesForm/>}/>
+*/

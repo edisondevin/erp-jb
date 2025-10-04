@@ -1,8 +1,87 @@
-import { createContext,useContext,useMemo,useState } from 'react'
-import { api } from '../services/api'
-import type { UserToken } from './types'
-function decodeJWT(token:string):UserToken|null{try{const p=JSON.parse(atob(token.split('.')[1]));return{sub:p.sub,email:p.email,roles:p.roles||[],perms:p.perms||[]}}catch{return null}}
- type AuthCtx={user:UserToken|null;accessToken:string|null;refreshToken:string|null;login:(e:string,p:string)=>Promise<void>;logout:()=>void;hasRole:(r:string)=>boolean;can:(p:string)=>boolean}
-const Ctx=createContext<AuthCtx>({} as any)
-export const useAuth=()=>useContext(Ctx)
-export function AuthProvider({children}:{children:React.ReactNode}){const[accessToken,setAccessToken]=useState<string|null>(()=>localStorage.getItem('accessToken'));const[refreshToken,setRefreshToken]=useState<string|null>(()=>localStorage.getItem('refreshToken'));const[user,setUser]=useState<UserToken|null>(()=>accessToken?decodeJWT(accessToken):null);const login=async(email:string,password:string)=>{const{data}=await api.post('/auth/login',{email,password});localStorage.setItem('accessToken',data.accessToken);if(data.refreshToken)localStorage.setItem('refreshToken',data.refreshToken);setAccessToken(data.accessToken);setRefreshToken(data.refreshToken||null);setUser(decodeJWT(data.accessToken))};const logout=()=>{localStorage.removeItem('accessToken');localStorage.removeItem('refreshToken');setAccessToken(null);setRefreshToken(null);setUser(null)};const hasRole=(r:string)=>!!user?.roles?.includes(r);const can=(p:string)=>!!user?.perms?.includes(p);const value=useMemo(()=>({user,accessToken,refreshToken,login,logout,hasRole,can}),[user,accessToken,refreshToken]);return<Ctx.Provider value={value}>{children}</Ctx.Provider>}
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { api } from '../services/api';
+
+type UserInfo = {
+  id?: number;
+  email?: string;
+  roles: string[];
+  perms: string[];
+};
+
+type AuthContextValue = {
+  accessToken: string | null;
+  refreshToken: string | null;
+  user: UserInfo | null;
+
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+
+  hasRole: (role: string) => boolean;
+  can: (perm: string) => boolean;
+};
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem('accessToken'));
+  const [refreshToken, setRefreshToken] = useState<string | null>(localStorage.getItem('refreshToken'));
+  const [user, setUser] = useState<UserInfo | null>(() => {
+    const roles = JSON.parse(localStorage.getItem('roles') || '[]');
+    const perms = JSON.parse(localStorage.getItem('perms') || '[]');
+    const email = localStorage.getItem('email') || undefined;
+    if (!roles.length && !perms.length) return null;
+    return { email, roles, perms };
+  });
+
+  const login = async (email: string, password: string) => {
+    const { data } = await api.post('/auth/login', { email, password });
+    const { accessToken, refreshToken, roles = [], perms = [] } = data;
+
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('roles', JSON.stringify(roles));
+    localStorage.setItem('perms', JSON.stringify(perms));
+    localStorage.setItem('email', email);
+
+    setAccessToken(accessToken);
+    setRefreshToken(refreshToken);
+    setUser({ email, roles, perms });
+  };
+
+  const logout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('roles');
+    localStorage.removeItem('perms');
+    localStorage.removeItem('email');
+    setAccessToken(null);
+    setRefreshToken(null);
+    setUser(null);
+  };
+
+  const hasRole = (role: string) => !!user?.roles?.includes(role);
+  const can = (perm: string) => !!user?.perms?.includes(perm);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({ accessToken, refreshToken, user, login, logout, hasRole, can }),
+    [accessToken, refreshToken, user]
+  );
+
+  // refresca user desde localStorage si alguien limpió/recargó
+  useEffect(() => {
+    if (!user && accessToken) {
+      const roles = JSON.parse(localStorage.getItem('roles') || '[]');
+      const perms = JSON.parse(localStorage.getItem('perms') || '[]');
+      const email = localStorage.getItem('email') || undefined;
+      setUser({ email, roles, perms });
+    }
+  }, [accessToken, user]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within <AuthProvider>');
+  return ctx;
+};
